@@ -1,4 +1,4 @@
-import { Component } from 'react';
+import { useState, useEffect } from 'react';
 import { ToastContainer } from 'react-toastify';
 import { updateFetch } from 'components/services/pixabay.api';
 
@@ -8,72 +8,60 @@ import Button from './ImageFinder/Button';
 import Modal from './ImageFinder/Modal';
 import { Img } from './ImageFinder/Image.module';
 
-export default class App extends Component {
-  state = {
-    searchImage: '',
-    images: '',
-    page: 1,
-    showModal: false,
-    currentImage: {},
-  };
+export default function App() {
+  const [searchImage, setSearchImage] = useState('');
+  const [images, setImages] = useState('');
+  const [page, setPage] = useState(1);
+  const [showModal, setShowModal] = useState(false);
+  const [currentImage, setCurrentImage] = useState({});
 
-  componentDidUpdate(prevProps, prevState) {
-    const { searchImage, page } = this.state;
-
-    if (prevState.searchImage !== searchImage || prevState.page !== page) {
-      updateFetch(searchImage, page).then(response => {
-        const prevImages = this.state.images;
-        const nextImages = response.data.hits;
-
-        this.setState({
-          images: [...prevImages, ...nextImages],
-        });
-      });
+  useEffect(() => {
+    if (!searchImage) {
+      return;
     }
-  }
+    updateFetch(searchImage, page).then(response => {
+      const nextImages = response.data.hits;
+      setImages(state => [...state, ...nextImages]);
+    });
+  }, [searchImage, page]);
 
-  toggleModal = () => {
-    this.setState(({ showModal }) => ({
-      showModal: !showModal,
-    }));
+  const toggleModal = () => {
+    setShowModal(state => (state = !state));
   };
 
-  onLoadMore = () => {
-    this.setState(state => ({ page: state.page + 1 }));
+  const onLoadMore = () => {
+    setPage(state => state + 1);
   };
 
-  handleFormSubmit = searchImage => {
-    this.setState({ searchImage, page: 1, images: '' });
+  const handleFormSubmit = searchImage => {
+    setSearchImage(searchImage);
+    setPage(1);
+    setImages('');
   };
 
-  dataModal = (tags, largeImageURL) => {
-    this.setState({ currentImage: { tags, largeImageURL } });
+  const dataModal = (tags, largeImageURL) => {
+    setCurrentImage({ tags, largeImageURL });
   };
 
-  render() {
-    const { images, showModal } = this.state;
-    const { largeImageURL, tags } = this.state.currentImage;
-
-    return (
-      <>
-        <SearchBar onChange={this.handleFormSubmit} />
-        {images.length > 0 && (
-          <>
-            <ImageGallery
-              onClick={this.toggleModal}
-              images={images}
-              dataModal={this.dataModal}
-            />
-            <Button onClick={this.onLoadMore} />
-          </>
-        )}
-        {showModal && (
-          <Modal onClose={this.toggleModal}>
-            <Img src={largeImageURL} alt={tags} />
-          </Modal>
-        )}
-        <ToastContainer autoClose={3000} />
-      </>
-    );
-  }
+  return (
+    <>
+      <SearchBar onChange={handleFormSubmit} />
+      {images.length > 0 && (
+        <>
+          <ImageGallery
+            onClick={toggleModal}
+            images={images}
+            dataModal={dataModal}
+          />
+          <Button onClick={onLoadMore} />
+        </>
+      )}
+      {showModal && (
+        <Modal onClose={toggleModal}>
+          <Img src={currentImage.largeImageURL} alt={currentImage.tags} />
+        </Modal>
+      )}
+      <ToastContainer autoClose={3000} />
+    </>
+  );
 }

@@ -1,4 +1,4 @@
-import { Component } from 'react';
+import { useState } from 'react';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import {
@@ -9,44 +9,40 @@ import {
   SearchFormInput,
 } from './Image.module';
 
-export default class SearchBar extends Component {
-  state = {
-    searchImage: '',
+export default function SearchBar({ onChange }) {
+  const [searchImage, setSearchImage] = useState('');
+
+  const handleImageChange = e => {
+    setSearchImage(e.currentTarget.value.toLowerCase());
   };
 
-  handleImageChange = e => {
-    this.setState({ searchImage: e.currentTarget.value.toLowerCase() });
-  };
-
-  handleSubmit = e => {
+  const handleSubmit = e => {
     e.preventDefault();
 
-    if (this.state.searchImage.trim() === '') {
+    if (searchImage.trim() === '') {
       return toast.error('Введите в строке поиска');
     }
 
-    this.props.onChange(this.state.searchImage);
-    this.setState({ searchImage: '' });
+    onChange(searchImage);
+    setSearchImage('');
   };
 
-  render() {
-    return (
-      <SearchBarHeader>
-        <SearchForm onSubmit={this.handleSubmit}>
-          <SearchFormButton type="submit">
-            <SearchFormButtonLabel>Search</SearchFormButtonLabel>
-          </SearchFormButton>
+  return (
+    <SearchBarHeader>
+      <SearchForm onSubmit={handleSubmit}>
+        <SearchFormButton type="submit">
+          <SearchFormButtonLabel>Search</SearchFormButtonLabel>
+        </SearchFormButton>
 
-          <SearchFormInput
-            type="text"
-            autoComplete="off"
-            autoFocus
-            placeholder="Search images and photos"
-            value={this.state.searchImage}
-            onChange={this.handleImageChange}
-          />
-        </SearchForm>
-      </SearchBarHeader>
-    );
-  }
+        <SearchFormInput
+          type="text"
+          autoComplete="off"
+          autoFocus
+          placeholder="Search images and photos"
+          value={searchImage}
+          onChange={handleImageChange}
+        />
+      </SearchForm>
+    </SearchBarHeader>
+  );
 }
